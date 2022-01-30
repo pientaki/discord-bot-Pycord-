@@ -89,7 +89,7 @@ async def disconnect(ctx):
     await voice.disconnect()
     await ctx.send('ばいばい')
 
-@slash.command(name='sourcecode',description = 'ソロウ君のソースコードを閲覧できます',guild_ids = test_guilds)
+@slash.command(name='sourcecode',description = 'ソースコードを閲覧できます',guild_ids = test_guilds)
 async def volume(ctx):
     await ctx.send('ばいばい')
 
@@ -124,7 +124,7 @@ async def update(ctx):
  emb = discord.Embed(color=0xff0000)
  emb.title = 'Bot update info'
  emb.description = (
-   f"**<ソロウ君>:**スラッシュコマンドに対応\n"
+   f"**スラッシュコマンドに対応\n"
  )
  emb.set_thumbnail(url="https://kakijun.jp/shotaigifkm/tm_E697A9.gif")
  await ctx.send(embed=emb)
