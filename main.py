@@ -91,7 +91,7 @@ async def disconnect(ctx):
 
 @slash.command(name='sourcecode',description = 'ソースコードを閲覧できます',guild_ids = test_guilds)
 async def volume(ctx):
-    await ctx.send('ばいばい')
+    await ctx.send('ソースコードのURL')
 
 @slash.command(name='clear',description = '送信したメッセージを過去5件分消去します',guild_ids = test_guilds)
 async def clear(ctx, amount=5):
