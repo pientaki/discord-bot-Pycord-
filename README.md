@@ -1,3 +1,3 @@
 # ソロウ君
-sorrows
+sorrows/n
 Copyright © 2021-2022 Sorrows[SOR] All Rights Reserved.
