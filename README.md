@@ -1,2 +1,2 @@
-# discord-music-bot
+# ソロウ君
 sorrows
