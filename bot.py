@@ -26,7 +26,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="*", intents=intents)
 bot.multiplier = 1
-test_ids=[902562000855502909]
+test_ids=[ギルドID]
 status=cycle(["/cmdでコマンド一覧","早漏で候","メンバーを監視中"])
 
 bot.add_cog(Server(bot))
