@@ -1,2 +1,2 @@
-# discord music bot
+# discord bot
 Copyright © 2021-2022 Sorrows[SOR] All Rights Reserved.
