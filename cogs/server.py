@@ -5,6 +5,10 @@ from discord.ext import commands
 import humanfriendly
 import datetime
 
+Intents = discord.Intents.default()
+Intents.members = True
+
+
 class Server(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -16,13 +20,15 @@ class Server(commands.Cog):
     @slash_command(name="server", description="サーバー情報を表示")
     async def server(self, ctx: discord.ApplicationContext):
         owner=str(ctx.guild.owner)
-        region = str(ctx.guild.region)
         guild_id = str(ctx.guild.id)
         memberCount = str(ctx.guild.member_count)
         icon = str(ctx.guild.icon)
         desc=ctx.guild.description
         no_voice_channels = len(ctx.guild.voice_channels)
         no_text_channels = len(ctx.guild.text_channels)
+        role_count = len(ctx.guild.roles)
+        list_of_bots = [bot.mention for bot in ctx.guild.members if bot.bot]
+        vlev = str(ctx.guild.verification_level)
         emoji_string = ""
         for e in ctx.guild.emojis:
             if e.is_usable():
@@ -31,24 +37,33 @@ class Server(commands.Cog):
         embed = discord.Embed(
             title=ctx.guild.name + " サーバー情報",
             description=desc,
-            color=discord.Color.blue()
+            color=ctx.author.color
         )
         embed.set_thumbnail(url=icon)
         embed.add_field(name="ID", value=guild_id, inline=True)
-        embed.add_field(name="地域", value=region, inline=True)
+        embed.add_field(name="認証レベル", value=vlev, inline=True)
         embed.add_field(name="オーナー", value=owner, inline=False)
         embed.add_field(name="メンバー数", value=memberCount, inline=True)
-        embed.add_field(name="カスタム絵文字", value=emoji_string or "登録なし", inline=False)
-        embed.add_field(name="# ボイスチャンネル", value=no_voice_channels)
-        embed.add_field(name="# テキストチャンネル", value=no_text_channels)
+        embed.add_field(name="Bot", value=(', '.join(list_of_bots)), inline=True)
+        embed.add_field(name="# ボイスチャンネル", value=no_voice_channels, inline=False)
+        embed.add_field(name="# テキストチャンネル", value=no_text_channels, inline=False)
+        embed.add_field(name="最高ロール", value=ctx.guild.roles[-2], inline=True)
+        embed.add_field(name="ロール数", value=str(role_count), inline=True)
+        embed.add_field(name="作成日時", value=ctx.guild.created_at.__format__('%A, %d. %B %Y @ %H:%M:%S'), inline=False)
+
+        embed2 = discord.Embed(
+            title="サーバー絵文字一覧",
+            description=emoji_string,
+            color=ctx.author.color
+        )
 
         await ctx.respond(embed=embed)
-
-        members=[]
-        async for member in ctx.guild.fetch_members(limit=150) :
-            mememed = discord.Embed(title="メンバー", color=discord.Color.from_rgb(62, 138, 111))
-            mememed.add_field(name="ステータス", value='名前 : {}\t 状態 : {}\n 参加日時 {}'.format(member.display_name,str(member.status),str(member.joined_at)))
-            await ctx.send(embed=mememed)
+        await ctx.send(embed=embed2)
+        #members=[]
+        #async for member in ctx.guild.fetch_members(limit=150) :
+            #mememed = discord.Embed(title="メンバー", color=discord.Color.from_rgb(62, 138, 111))
+            #mememed.add_field(name="ステータス", value='名前 : {}\t 状態 : {}\n 参加日時 {}'.format(member.display_name,str(member.status),str(member.joined_at)))
+            #await ctx.send(embed=mememed)
 
 
     @slash_command(name="user-info", description="ユーザー情報を表示")
