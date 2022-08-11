@@ -10,9 +10,11 @@ from googlesearch import search
 from urllib import parse
 from googleapiclient.discovery import build
 import random
+import wikipedia
+from selenium import webdriver
 
 translator = Translator()
-api_key = "AIzaSyBJmDRfabTIgyx6as6WrCPalj1w4C0AYaE"
+api_key = "APY KEY"
 
 class Google(commands.Cog):
     def __init__(self, bot):
@@ -38,29 +40,29 @@ class Google(commands.Cog):
         embed.description=(f"**Japanese :** ja \n"f"**English :** en \n"f"**Hindi :** hi\n\n"f"**:united_nations: その他**\n" "https://py-googletrans.readthedocs.io/en/latest/")
         await ctx.respond(embed=embed)
 
-    #@commands.Cog.listener()
-    #async def on_reaction_add(self, reaction, user):
-        #if reaction.count == 1:
-            #if str(reaction.emoji) == "🇮🇳":
-                #translator = Translator()
-                #country = translator.detect(text=reaction.message.content)
-                #trans_en = translator.translate(text=reaction.message.content,  src=country.lang, dest='hi')
-                #await reaction.message.channel.send(trans_en.text)
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        if reaction.count == 1:
+            if str(reaction.emoji) == "🇮🇳":
+                translator = Translator()
+                country = translator.detect(text=reaction.message.content)
+                trans_en = translator.translate(text=reaction.message.content,  src=country.lang, dest='hi')
+                await reaction.message.channel.send(trans_en.text)
 
-            #if str(reaction.emoji) == "🇯🇵":
-                #translator = Translator()
-                #country = translator.detect(text=reaction.message.content)
-                #trans_en = translator.translate(text=reaction.message.content,  src=country.lang, dest='ja')
-                #await reaction.message.channel.send(trans_en.text)
+            if str(reaction.emoji) == "🇯🇵":
+                translator = Translator()
+                country = translator.detect(text=reaction.message.content)
+                trans_en = translator.translate(text=reaction.message.content,  src=country.lang, dest='ja')
+                await reaction.message.channel.send(trans_en.text)
 
-            #if str(reaction.emoji) == "🇺🇸":
-                #translator = Translator()
-                #country = translator.detect(text=reaction.message.content)
-                #trans_en = translator.translate(text=reaction.message.content,  src=country.lang, dest='en')
-                #await reaction.message.channel.send(trans_en.text)
+            if str(reaction.emoji) == "🇺🇸":
+                translator = Translator()
+                country = translator.detect(text=reaction.message.content)
+                trans_en = translator.translate(text=reaction.message.content,  src=country.lang, dest='en')
+                await reaction.message.channel.send(trans_en.text)
           
     @slash_command(name="vote", description="投票機能")
-    async def poll(self, ctx: discord.ApplicationContext,  topic: Option(str, '投票テーマ'), choice1: Option(str, '選択肢１'), choice2: Option(str, '選択肢２')):
+    async def poll(self, ctx: discord.ApplicationContext,  topic: Option(str, '投票テーマ'), choice1: Option(str, '選択肢１'), choice2: Option(str, '選択肢２'), time: Option(int, "投票期間（秒）")):
         await ctx.respond("**投票開始**")
         t_delta = datetime.timedelta(hours=9)
         JST = datetime.timezone(t_delta, 'JST')
@@ -70,7 +72,7 @@ class Google(commands.Cog):
         message = await ctx.send(embed = embed)
         await message.add_reaction("1️⃣")
         await message.add_reaction("2️⃣")
-        await asyncio.sleep(120)
+        await asyncio.sleep(time)
 
         newmessage = await ctx.channel.fetch_message(message.id)
         onechoice = await newmessage.reactions[0].users().flatten()
@@ -86,7 +88,13 @@ class Google(commands.Cog):
 
         await newmessage.edit(embed = embed)
 
-    @slash_command(name="search", description="インターネットで検索")
+    @slash_command(name="googlesearch", description="Googleで検索(上位5件分)")
+    async def gsearch(self, ctx: discord.ApplicationContext, word: Option(str, '検索ワード')):
+        kensaku = word
+        for url in search(kensaku, lang="jp",num_results = 5):
+            await ctx.respond(url)
+
+    @slash_command(name="search", description="インターネットの検索結果のリンクを生成")
     async def search(self, ctx: discord.ApplicationContext, *, word: Option(str, '検索ワード')):
         param = parse.urlencode({"q": word})
         await ctx.respond(
@@ -111,13 +119,72 @@ class Google(commands.Cog):
         ran = random.randint(0, 9)
         resource = build("customsearch", "v1", developerKey=api_key).cse()
         result = resource.list(
-            q=f"{search}", cx="2dde91b36931db923", searchType="image"
+            q=f"{search}", cx="KEY", searchType="image"
         ).execute()
         url = result["items"][ran]["link"]
         embed = discord.Embed(title=f" `{search}` の画像", timestamp=datetime.datetime.now(JST))
         embed.set_image(url=url)
         embed.set_footer(text=f"{ctx.author.name}のリクエスト")
         await ctx.respond(embed=embed)
+
+    @slash_command(name="wiki", description="wikipediaで検索")
+    async def wiki(self, ctx: discord.ApplicationContext, word: Option(str, "検索ワード")):
+        wikipedia.set_lang("ja")
+        try:
+            embed = discord.Embed(title=f"{word}")
+            embed.add_field(name="概要", value=wikipedia.summary(word))
+            embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Wikipedia-logo-v2-en.svg/1784px-Wikipedia-logo-v2-en.svg.png")
+            await ctx.respond(embed=embed)
+
+        except wikipedia.exceptions.DisambiguationError as e:
+            embed = discord.Embed(title="検索失敗", description="下の候補から選んで下さい")
+            embed.add_field(name="候補", value=e)
+            embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Wikipedia-logo-v2-en.svg/1784px-Wikipedia-logo-v2-en.svg.png")
+            await ctx.respond(embed=embed)
+
+    @slash_command(name="screenshot", description="ネット上のページのスクリーンショットを撮影")
+    async def ss(self, ctx: discord.ApplicationContext, urlorword: Option(str, "URLか検索したいページの名前")):
+
+        await ctx.response.defer()
+
+        try:
+
+            options = webdriver.ChromeOptions()
+            options.add_argument('--headless')
+            options.add_argument('--disable-gpu')
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--remote-debugging-port=9222')
+            options.add_experimental_option('excludeSwitches', ['enable-logging'])
+            browser = webdriver.Chrome(options=options)
+            browser.set_window_size(950, 800)
+
+            if not 'http' in str(urlorword):
+                kensaku = urlorword
+                for url in search(kensaku, lang="jp",num_results = 1):
+                    browser.get(url)
+                    browser.get_screenshot_as_file('screenshot.png')
+
+                    file = discord.File('screenshot.png', filename='image.png')
+                    embed = discord.Embed(title=f"{url}")
+                    embed.set_image(url='attachment://image.png')
+                    await ctx.followup.send(file=file, embed=embed)
+                    browser.quit()
+
+            else:
+                browser.get(urlorword)
+                browser.get_screenshot_as_file('screenshot.png')
+
+                file = discord.File('screenshot.png', filename='image.png')
+
+                
+                embed = discord.Embed(title=f"{urlorword}")
+                embed.set_image(url='attachment://image.png')
+                await ctx.followup.send(file=file, embed=embed)
+                browser.quit()
+
+        except Exception as e:
+            await ctx.followup.send(e)    
 
 def setup(bot):
     bot.add_cog(Google(bot))
