@@ -5,7 +5,7 @@ import random
 from discord.ext import commands
 from akinator.async_aki import Akinator
 from discord.ext.commands import BucketType
-from discord.commands import slash_command, Option
+from discord.commands import slash_command, Option, SlashCommandGroup
 
 aki = Akinator()
 emojis_c = ['✅', '❌', '🤷', '👍', '👎', '⏮', '🛑']
@@ -27,8 +27,11 @@ class Game(commands.Cog):
     async def on_ready(self):
         print("Game Cog is now ready!")
 
+    
+    game = SlashCommandGroup("game", "ゲームコマンド")
+
 #アキネイター
-    @slash_command(name="akinator", description="アキネイターをプレイ")
+    @game.command(name="akinator", description="アキネイターをプレイ")
     @commands.max_concurrency(1, per=BucketType.default, wait=False)
     async def guess(self, ctx: discord.ApplicationContext):
         await ctx.respond("準備中...")
@@ -152,7 +155,7 @@ class Game(commands.Cog):
 
 #マインスイーパー
 
-    @slash_command(name="minesweeper", description="マインスイーパーをプレイ")
+    @game.command(name="minesweeper", description="マインスイーパーをプレイ")
     async def minesweeper(self, ctx: discord.ApplicationContext, columns: Option(str, '縦のマス数'), rows: Option(str, '横のマス数'), bombs: Option(str, '爆弾の数')):
         if columns is None or rows is None and bombs is None:
             if columns is not None or rows is not None or bombs is not None:
@@ -248,6 +251,52 @@ class Game(commands.Cog):
     async def minesweeper_error(self, ctx, error):
         await ctx.send(errortxt)
         return
+
+    @game.command(name="rps", description="じゃんけん")
+    async def rps(self, ctx:discord.ApplicationContext):
+        view = RpsView()
+        await ctx.respond(rpsready, view=view)
+
+
+
+rpsready = 'https://cdn-ak.f.st-hatena.com/images/fotolife/k/kiji0621/20190411/20190411174821.gif'
+#rpswin = 'https://cdn-ak.f.st-hatena.com/images/fotolife/k/kiji0621/20190411/20190411191123.gif'
+rpslose = 'https://cdn-ak.f.st-hatena.com/images/fotolife/k/kiji0621/20190411/20190411175128.png'
+rpshondawin = ['https://cdn-ak.f.st-hatena.com/images/fotolife/k/kiji0621/20190411/20190411191123.gif','https://cdn-ak.f.st-hatena.com/images/fotolife/k/kiji0621/20190411/20190411192656.png', 'https://cdn-ak.f.st-hatena.com/images/fotolife/k/kiji0621/20190411/20190411192619.png', 'https://cdn-ak.f.st-hatena.com/images/fotolife/k/kiji0621/20190411/20190411192839.png']
+rpsGame = ['グー', 'チョキ', 'パー']
+
+comp_choice = random.choice(rpsGame)
+
+class RpsView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=60)
+
+    @discord.ui.button(style=discord.ButtonStyle.green, label="グー", row=1)
+    async def rock(self, button: discord.ui.Button, interaction: discord.Interaction):
+        if comp_choice == 'グー':
+            return await interaction.response.edit_message(content=f"あいこや....しょーもな....俺の手は{comp_choice}", view=None)
+        elif comp_choice == 'パー':
+            return await interaction.response.edit_message(content=f"俺の手は{comp_choice}{rpslose}", view=None)
+        elif comp_choice == 'チョキ':
+            return await interaction.response.edit_message(content=f"俺の手は{comp_choice}{random.choice(rpshondawin)}", view=None)
+            
+    @discord.ui.button(style=discord.ButtonStyle.green, label="パー", row=1)
+    async def paper(self, button: discord.ui.Button, interaction: discord.Interaction):
+        if comp_choice == 'グー':
+            return await interaction.response.edit_message(content=f"俺の手は{comp_choice}{random.choice(rpshondawin)}", view=None)
+        elif comp_choice == 'パー':
+            return await interaction.response.edit_message(content=f'あいこや....しょーもな....俺の手は{comp_choice}', view=None)
+        elif comp_choice == 'チョキ':
+            return await interaction.response.edit_message(content=f"俺の手は{comp_choice}{rpslose}", view=None)
+            
+    @discord.ui.button(style=discord.ButtonStyle.green, label="チョキ", row=1)
+    async def scissors(self, button: discord.ui.Button, interaction: discord.Interaction):
+        if comp_choice == 'グー':
+            return await interaction.response.edit_message(content=f"俺の手は{comp_choice}{rpslose}", view=None)
+        elif comp_choice == 'パー':
+            return await interaction.response.edit_message(content=f"俺の手は{comp_choice}{random.choice(rpshondawin)}", view=None)            
+        elif comp_choice == 'チョキ':
+            return await interaction.response.edit_message(content=f'あいこや....しょーもな....俺の手は{comp_choice}', view=None)
 
 def setup(bot):
     bot.add_cog(Game(bot))
